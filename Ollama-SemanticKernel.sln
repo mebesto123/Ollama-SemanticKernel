@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama-SemanticKernel", "Ollama-SemanticKernel\Ollama-SemanticKernel.csproj", "{A9F5356B-180C-48A9-8C6D-65B04EB278F4}"
 EndProject
