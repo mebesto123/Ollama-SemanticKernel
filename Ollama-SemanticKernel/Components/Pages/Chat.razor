@@ -1,53 +1,72 @@
 ﻿@page "/chat"
 @using Ollama.SemanticKernel.Models
 @inject ISnackbar Snackbar
+@inject IScrollListenerFactory ScrollListenerFactory
 
 
 <h3>Chat</h3>
 
-@{
-    var orderedGroups = messages
-        .OrderBy(m => m.Time)
-        .GroupBy(m => m.Name)
-        .ToList();
+<MudPaper Style="padding-bottom: 20%">
 
-    for (int i = 0; i < orderedGroups.Count; i++)
-    {
-        var group = orderedGroups[i];
-        var position = group.First().Name == "agent" ? ChatBubblePosition.Start : ChatBubblePosition.End;
+    @{
+        var orderedGroups = messages
+            .OrderBy(m => m.Time)
+            .GroupBy(m => m.Name)
+            .ToList();
 
-        @foreach (var message in group.OrderBy(m => m.Time))
+        for (int i = 0; i < orderedGroups.Count; i++)
         {
-            <MudChat ChatPosition="@position">
-                <MudChatHeader Time="@message.Time" />
+            var group = orderedGroups[i];
+            var position = group.First().Name == "agent" ? ChatBubblePosition.Start : ChatBubblePosition.End;
+
+            @foreach (var message in group.OrderBy(m => m.Time))
+            {
+                <MudChat ChatPosition="@position">
+                    <MudChatHeader Time="@message.Time.ToString("f")" />
                     <MudChatBubble>
                         @message.Text
                     </MudChatBubble>
-            </MudChat>
+                </MudChat>
+            }
         }
     }
-}
+</MudPaper>
 
-<br />
-
-<MudTextField @bind-Value="TextValue" Immediate=true Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" AdornmentColor="Color.Primary"
-KeyDownPreventDefault="_preventDefault" TextUpdateSuppression=false OnAdornmentClick="QueryAgent" OnKeyDown="HandleKeyDown"></MudTextField>
-
+<MudDrawer Anchor="Anchor.Bottom" Variant="DrawerVariant.Persistent" Style="top:auto; bottom: 10%; width: 80%; height: auto; left: 18%">
+    <MudTextField @bind-Value="TextValue" Immediate=true Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" AdornmentColor="Color.Primary"
+    KeyDownPreventDefault="_preventDefault" TextUpdateSuppression=false OnAdornmentClick="QueryAgent" OnKeyDown="HandleKeyDown" FullWidth></MudTextField>
+</MudDrawer> 
 
 @code {
     bool _preventDefault;
+    private IScrollListener? _scrollListener;
     private List<Message> messages = new();
+    private ElementReference bottomRef;
     private string TextValue { get; set; }
 
     protected override void OnInitialized()
     {
-        messages.Add(new Message("agent", "Hello, I am chat bot. Please try talking to me.", DateTime.Now.ToString("f")));
+        _scrollListener = ScrollListenerFactory.Create(null);
+        _scrollListener.OnScroll += OnScrollAsync;
+        messages.Add(new Message("agent", "Hello, I am chat bot. Please try talking to me.", DateTime.Now));
     }
 
     private void QueryAgent()
     {
-        messages.Add(new Message("user", TextValue, DateTime.Now.ToString("f")));
+        messages.Add(new Message("user", TextValue, DateTime.Now));
         TextValue = "";
+    }
+
+
+    private void OnScrollAsync(object? sender, ScrollEventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        if (_scrollListener != null)
+            _scrollListener.OnScroll -= OnScrollAsync;
     }
 
     protected void HandleKeyDown(KeyboardEventArgs e)
